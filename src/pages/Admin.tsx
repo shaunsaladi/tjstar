@@ -1,9 +1,9 @@
 import { Search, Filter, MoreHorizontal, CheckCircle2, Clock, XCircle, FileText } from 'lucide-react';
 
 const mockProjects = [
-  { id: 'PRJ-101', title: 'Attention Patterns in Transformer Models for NLP', authors: 'Alex Chen, Jamie Doe', lab: 'Computer Systems', status: 'Approved', format: 'Presentation' },
+  { id: 'PRJ-101', title: 'Attention Patterns in Transformer Models for NLP', authors: 'Shaun Saladi, Uzair Nasir, Adhiraj Chhoda', lab: 'Computer Systems', status: 'Approved', format: 'Presentation' },
   { id: 'PRJ-102', title: 'Novel Synthesis of Biodegradable Polymers', authors: 'Sarah Jenkins', lab: 'Chemistry', status: 'Pending Review', format: 'Poster' },
-  { id: 'PRJ-103', title: 'Behavioral Responses of Drosophila to Light Stimuli', authors: 'Michael Zhu', lab: 'Neuroscience', status: 'Revisions Requested', format: 'Lightning Talk' },
+  { id: 'PRJ-103', title: 'Behavioral Responses of Drosophila to Light Stimuli', authors: 'Michael Zhu', lab: 'Neuroscience', status: 'Revisions Requested', format: 'Presentation' },
   { id: 'PRJ-104', title: 'Optimizing Wind Turbine Blade Aerodynamics', authors: 'David Kim', lab: 'Prototyping', status: 'Approved', format: 'Presentation' },
   { id: 'PRJ-105', title: 'Exoplanet Transit Analysis Using Deep Learning', authors: 'Amanda Ray', lab: 'Astronomy', status: 'Pending Review', format: 'Presentation' },
 ];
@@ -13,7 +13,6 @@ export default function Admin() {
     <div className="min-h-full py-8 w-full bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl font-display font-bold text-slate-900">Faculty Dashboard</h1>
@@ -29,7 +28,6 @@ export default function Admin() {
           </div>
         </div>
 
-        {/* Stats row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
             { label: 'Total Submissions', value: '284', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-100' },
@@ -49,10 +47,8 @@ export default function Admin() {
           ))}
         </div>
 
-        {/* Main Table Area */}
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
           
-          {/* Table Toolbar */}
           <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
             <div className="relative w-full sm:max-w-md">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -69,7 +65,6 @@ export default function Admin() {
             </button>
           </div>
 
-          {/* Table */}
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
@@ -125,7 +120,6 @@ export default function Admin() {
             </table>
           </div>
           
-          {/* Pagination Footer */}
           <div className="bg-slate-50 px-6 py-3 border-t border-slate-200 flex items-center justify-between">
             <span className="text-sm text-slate-500">Showing <span className="font-medium text-slate-700">1</span> to <span className="font-medium text-slate-700">5</span> of <span className="font-medium text-slate-700">284</span> results</span>
             <div className="flex gap-2">
