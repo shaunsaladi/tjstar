@@ -22,8 +22,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center cursor-pointer" onClick={() => navigateTo('landing')}>
-              <Microscope className="h-8 w-8 text-blue-700" />
-              <span className="ml-2 text-xl font-display font-bold text-slate-900 tracking-tight">tjSTAR</span>
+              <span className="ml-2 text-xl font-display font-bold text-slate-900 tracking-tight">TJStar</span>
             </div>
 
             <div className="hidden sm:flex sm:items-center sm:space-x-8">
