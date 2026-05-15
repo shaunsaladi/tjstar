@@ -1,39 +1,41 @@
 import os
-from flask import Flask, redirect, url_for, session, request, jsonify
+import io
+from flask import Flask, redirect, url_for, session, request, jsonify, send_file
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from requests_oauthlib import OAuth2Session
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 
-# Load environment variables from .env file
+# Load environmental variables from local configurations
 load_dotenv()
 
 app = Flask(__name__)
 
-# AUTHENTICATION & SESSION COOKIE CONFIGURATION
+# STATIC SESSION CRYPTOGRAPHY KEY
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "tjstar_local_dev_secret_key_string")
 
+# CROSS-PORT COOKIE SECURITY SETTINGS
 app.config.update(
-    SESSION_COOKIE_SAMESITE='Lax',      # Allows cookie sharing across local ports 3000 and 8000
-    SESSION_COOKIE_HTTPONLY=True,      # Restricts client-side scripting access to session cookie
-    SESSION_COOKIE_SECURE=False        # Permits cookies over insecure HTTP during local development
+    SESSION_COOKIE_SAMESITE='Lax',      # Allows cookie transmission across local ports 3000 and 8000
+    SESSION_COOKIE_HTTPONLY=True,      # Blocks malicious client-side script cookie execution
+    SESSION_COOKIE_SECURE=False        # Allows cookies over HTTP during development sessions
 )
 
-# FILE UPLOAD INFRASTRUCTURE SETUP
+# MULTIPART MEDIA DISK PATH STORAGE SETTINGS
 UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# SQLALCHEMY DATABASE ENGINE CONFIGURATION
+# SQL ENGINE DATA POOL CONFIGURATION
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tjstar.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Permit session cookie exchange from the React server on port 3000
+# Explicitly permit signed credentials to bridge port 3000 to backend engines
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 
-# ION AUTHENTICATION REGISTRATION VARIABLES
+# OAUTH PROTOCOL PATH REFERENCES
 CLIENT_ID = os.environ.get("ION_CLIENT_ID")
 CLIENT_SECRET = os.environ.get("ION_CLIENT_SECRET")
 REDIRECT_URI = os.environ.get("ION_REDIRECT_URI")
@@ -42,11 +44,11 @@ AUTHORIZATION_BASE_URL = "https://ion.tjhsst.edu/oauth/authorize/"
 TOKEN_URL = "https://ion.tjhsst.edu/oauth/token/"
 PROFILE_URL = "https://ion.tjhsst.edu/api/profile"
 
-# Bypass default OAuth HTTPS enforcement for local environment sessions
+# Bypass strict HTTPS constraints for native localhost loop execution
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 
-# RELATIONAL SQL DATABASE SCHEMAS
+# RELATIONAL DATA MODEL SCHEMAS
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ion_username = db.Column(db.String(80), unique=True, nullable=False)
@@ -63,13 +65,12 @@ class Project(db.Model):
     format = db.Column(db.String(120), nullable=False)
     food = db.Column(db.String(120), nullable=False)
     abstract = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(50), default='Pending Review') # Draft, Pending Review, Approved, Denied, Revisions Requested
+    status = db.Column(db.String(50), default='Pending Review')
     artifact_path = db.Column(db.String(255), nullable=True)
-    review_note = db.Column(db.Text, nullable=True) # Stores faculty feedback commentary
+    review_note = db.Column(db.Text, nullable=True) # Holds live commentary text fields from administrative edits
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     def to_dict(self):
-        """Converts raw database row contents into formatted JSON for frontend rendering."""
         return {
             "id": self.id,
             "display_id": f"PRJ-{self.id + 100}",
@@ -85,10 +86,9 @@ class Project(db.Model):
         }
 
 
-# AUTHENTICATION & INTERFACE ENDPOINTS
+# INTERFACE GATEWAY ENDPOINTS
 @app.route("/api/auth/login")
 def login():
-    """Step 1: Instantiates OAuth session tracking context and redirects to Ion."""
     ion = OAuth2Session(CLIENT_ID, redirect_uri=REDIRECT_URI, scope=["read"])
     authorization_url, state = ion.authorization_url(AUTHORIZATION_BASE_URL)
     session['oauth_state'] = state
@@ -96,7 +96,6 @@ def login():
 
 @app.route("/api/auth/callback")
 def callback():
-    """Step 2: Collects access keys, upserts unique identity records, establishes system session."""
     ion = OAuth2Session(CLIENT_ID, state=session.get('oauth_state'), redirect_uri=REDIRECT_URI)
     token = ion.fetch_token(TOKEN_URL, client_secret=CLIENT_SECRET, authorization_response=request.url)
     
@@ -110,7 +109,7 @@ def callback():
         user = User(
             ion_username=ion_username,
             full_name=profile_data.get('display_name'),
-            email=profile_data.get('tj_email'),
+            email=profile_data.get('tj_email'), # Explicitly maps direct target key schema
             is_student=profile_data.get('is_student', True)
         )
         db.session.add(user)
@@ -121,26 +120,43 @@ def callback():
         'ion_username': user.ion_username,
         'email': user.email,
         'full_name': user.full_name,
-        'picture': profile_data.get('picture'),
+        'picture': "http://localhost:8000/api/picture", # Points React internally to local image proxy stream
         'is_student': user.is_student
     }
+    session['raw_picture_url'] = profile_data.get('picture')
     session['oauth_token'] = token
     
     return redirect("http://localhost:3000/")
 
 @app.route("/api/me")
 def get_profile():
-    """Session verification check endpoint invoked by React app lifecycle mounts."""
     user = session.get('user')
     if user:
         return jsonify(user)
     return jsonify({"error": "Unauthorized"}), 401
 
+@app.route("/api/picture")
+def get_profile_picture():
+    """Proxies the authenticated external resource asset streaming to circumvent CORS restrictions."""
+    if 'oauth_token' not in session or 'raw_picture_url' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    ion = OAuth2Session(CLIENT_ID, token=session['oauth_token'])
+    try:
+        image_response = ion.get(session['raw_picture_url'])
+        if image_response.status_code == 200:
+            return send_file(
+                io.BytesIO(image_response.content),
+                mimetype=image_response.headers.get('Content-Type', 'image/jpeg')
+            )
+        return jsonify({"error": "Failed to resolve downstream avatar"}), image_response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-# SYMPOSIUM SUBMISSION PIPELINE ENDPOINTS
+
+# REGISTRY COMPONENT PROCESSING ENDPOINTS
 @app.route("/api/project/me", methods=["GET"])
 def get_my_project():
-    """Fetches any pre-existing submission or draft progress mapped to the logged-in student user."""
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
         
@@ -151,7 +167,6 @@ def get_my_project():
 
 @app.route("/api/submit", methods=["POST"])
 def submit_project():
-    """Processes incoming multipart FormData packets for both incremental saving and final submission."""
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
         
@@ -179,6 +194,7 @@ def submit_project():
         
     try:
         if project:
+            # Overwrite fields on existing model entries (UPSERT structure blueprint strategy)
             project.title = title
             project.authors = authors
             project.lab = lab
@@ -209,19 +225,17 @@ def submit_project():
         return jsonify({"error": str(e)}), 400
 
 
-# ADMINISTRATOR OPERATIONS ENDPOINTS
+# FACULTY ADMINISTRATIVE REVIEWS ENDPOINTS
 @app.route("/api/admin/projects", methods=["GET"])
 def get_admin_projects():
-    """Fetches all records registered in the project table. Role-guarded to non-student accounts only."""
     if 'user' not in session or session['user'].get('is_student') == True:
-        return jsonify({"error": "Forbidden: Faculty administrative level authorization required."}), 403
+        return jsonify({"error": "Forbidden: Administrative role authentication validation required."}), 403
         
     projects = Project.query.all()
     return jsonify([project.to_dict() for project in projects])
 
 @app.route("/api/admin/projects/<int:project_id>/review", methods=["POST"])
 def review_project(project_id):
-    """Processes approvals, rejections, and review comments added by faculty reviewers."""
     if 'user' not in session or session['user'].get('is_student') == True:
         return jsonify({"error": "Forbidden: Administrative access required."}), 403
         
@@ -230,7 +244,7 @@ def review_project(project_id):
     review_note = data.get('review_note', '')
 
     if status not in ['Approved', 'Denied', 'Revisions Requested']:
-        return jsonify({"error": "Invalid administrative status value configuration."}), 400
+        return jsonify({"error": "Invalid administrative status payload configuration."}), 400
 
     project = Project.query.get_or_404(project_id)
     project.status = status
@@ -245,7 +259,6 @@ def review_project(project_id):
 
 @app.route("/api/auth/logout")
 def logout():
-    """Wipes current server tracking scopes and invalidates client session headers."""
     session.clear()
     return jsonify({"success": True}), 200
 

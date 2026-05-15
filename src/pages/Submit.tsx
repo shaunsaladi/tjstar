@@ -17,7 +17,7 @@ export default function Submit() {
   const [currentStatus, setCurrentStatus] = useState<string | null>(null);
   const [reviewNote, setReviewNote] = useState<string | null>(null);
 
-  // Automatically load existing draft or submission when the component mounts
+  // Automatically fetch existing project entry state matrices upon mount execution lifecycle
   useEffect(() => {
     const loadDraft = async () => {
       try {
@@ -36,7 +36,7 @@ export default function Submit() {
           setReviewNote(data.review_note || null);
         }
       } catch (error) {
-        console.error("Failed to load draft:", error);
+        console.error("Failed to load draft row profiles:", error);
       }
     };
     loadDraft();
@@ -66,10 +66,10 @@ export default function Submit() {
   const saveProject = async (isDraft: boolean) => {
     setStatusMessage(null);
 
-    // Enforce validation constraints only on final submissions
+    // Apply strict field parsing restrictions ONLY during a final submission action
     if (!isDraft) {
       if (!title.trim() || !authors.trim() || !abstract.trim() || !lab || lab === 'Select a lab...') {
-        setStatusMessage({ type: 'error', text: 'Please fill out all mandatory fields before final submission.' });
+        setStatusMessage({ type: 'error', text: 'Please fill out all mandatory input fields before final submission execution.' });
         return;
       }
     }
@@ -102,15 +102,15 @@ export default function Submit() {
         setStatusMessage({
           type: 'success',
           text: isDraft 
-            ? 'Draft progress saved successfully.' 
+            ? 'Draft progress saved safely to relational registry database.' 
             : `Project submitted final! Assigned Reference ID: PRJ-${data.project_id + 100}`,
         });
       } else {
-        setStatusMessage({ type: 'error', text: data.error || 'Server rejected the database transaction.' });
+        setStatusMessage({ type: 'error', text: data.error || 'Server rejected the database ingestion transaction.' });
       }
     } catch (error) {
-      console.error("Submission error:", error);
-      setStatusMessage({ type: 'error', text: 'Network connection failure. Verify Flask status.' });
+      console.error("Submission operational failure:", error);
+      setStatusMessage({ type: 'error', text: 'Network connection failure. Verify Flask endpoint availability.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -126,10 +126,9 @@ export default function Submit() {
           </div>
           <h1 className="text-3xl font-display font-bold text-slate-900">Project Submission</h1>
           
-          {/* Dynamic Status Badges Display */}
           {currentStatus && (
             <div className="mt-2 flex flex-col gap-2">
-              <span className={`inline-flex w-max items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              <span className={`inline-flex w-max items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                 currentStatus === 'Approved' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
                 currentStatus === 'Denied' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
                 currentStatus === 'Revisions Requested' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
@@ -140,14 +139,14 @@ export default function Submit() {
             </div>
           )}
 
-          {/* Render Teacher Notes if corrections are requested */}
+          {/* Real-time Administrative Note Review Display Card */}
           {currentStatus === 'Revisions Requested' && (
             <div className="mt-4 p-4 border border-amber-200 bg-amber-50 text-amber-900 rounded-xl text-sm shadow-sm">
               <p className="font-bold flex items-center gap-1.5 text-amber-800">
                 <AlertCircle size={16} /> Revisions Requested by Lab Director:
               </p>
               <p className="mt-2 text-slate-700 bg-white border border-amber-100 p-3 rounded-lg font-medium whitespace-pre-line shadow-inner italic">
-                {reviewNote || "No text comments provided. Please coordinate updates directly with your research mentor."}
+                {reviewNote || "No modification details submitted. Coordinate with your lab supervisor for explicit update instructions."}
               </p>
             </div>
           )}
