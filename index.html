@@ -1,13 +1,130 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TJStar</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tjSTAR 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
 
+  <!-- NAV -->
+  <nav class="nav" id="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo">
+        <img src="img/logo.png" alt="tjSTAR" class="nav__icon">
+        <span class="nav__title">tjSTAR</span>
+        <span class="nav__countdown-timer" id="countdownTimer"></span>
+      </a>
+      <button class="nav__toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav__links" id="navLinks">
+        <a href="#about" class="nav__link">About</a>
+        <a href="#schedule" class="nav__link">Schedule</a>
+        <a href="connect.html" class="nav__link">Connect</a>
+        <a href="presentations.html" class="nav__cta">Presentations →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero__bg">
+      <div class="hero__gradient"></div>
+      <canvas class="hero__particles" id="heroParticles"></canvas>
+    </div>
+    <div class="hero__content">
+      <h1 class="hero__headline">tjSTAR</h1>
+      <div class="hero__actions">
+        <a href="presentations.html" class="btn btn--primary">See the presentations</a>
+        <a href="#about" class="btn btn--outline">What is tjSTAR?</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ABOUT -->
+  <section class="section section--paper" id="about">
+    <div class="section__inner section__split">
+      <div class="section__media">
+        <img src="img/presenting.png" alt="Senior presenting at tjSTAR" class="section__photo">
+        <span class="photo-credit">PC: Karen Lee / TJ Today</span>
+      </div>
+      <div class="section__text">
+        <p class="section__label">WHAT IT IS</p>
+        <h2 class="section__heading">What is tjSTAR?</h2>
+        <p>Every spring, TJHSST sets aside a full school day for seniors to present the research they've been working on all year at the tjSTAR (Thomas Jefferson Symposium to Advance Research).</p>
+        <p>Each senior gets a time slot and a room. Some present solo, some in teams. The topics come from TJ's 10 research labs + Mentorship: Computer Systems, Neuroscience, Quantum Physics, Oceanography, and more. The work spans across experiments, code, prototypes, and results from university partnerships.</p>
+      </div>
+    </div>
+    <div class="divider"></div>
+  </section>
+
+  <!-- SCHEDULE -->
+  <section class="section section--dark" id="schedule">
+    <div class="section__inner">
+      <p class="section__label section__label--light">tjSTAR 2026</p>
+      <h2 class="section__heading section__heading--light">Schedule</h2>
+      <div class="schedule-grid">
+        <div class="schedule-block schedule-block--keynote">
+          <span class="schedule-block__time">8:40 – 9:50</span>
+          <span class="schedule-block__title">Keynote</span>
+          <span class="schedule-block__detail">Mike Elias, TJ class of 2001, President of the Baltimore Orioles</span>
+        </div>
+        <div class="schedule-block">
+          <span class="schedule-block__time">10:00 – 10:45</span>
+          <span class="schedule-block__title">Block A</span>
+        </div>
+        <div class="schedule-block">
+          <span class="schedule-block__time">10:55 – 11:40</span>
+          <span class="schedule-block__title">Block B</span>
+        </div>
+        <div class="schedule-block">
+          <span class="schedule-block__time">11:50 – 12:35</span>
+          <span class="schedule-block__title">Block C</span>
+        </div>
+        <div class="schedule-block schedule-block--lunch">
+          <span class="schedule-block__time">12:35 – 1:25</span>
+          <span class="schedule-block__title">Lunch</span>
+        </div>
+      </div>
+      <div class="schedule-cta">
+        <a href="presentations.html" class="btn btn--primary">Browse all 258 presentations →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__col">
+        <p class="footer__brand">tjSTAR</p>
+        <p class="footer__sub">Thomas Jefferson High School for Science and Technology</p>
+        <p class="footer__address">6560 Braddock Road, Alexandria, VA 22312</p>
+      </div>
+      <div class="footer__col">
+        <p class="footer__heading">Explore</p>
+        <a href="#about">About tjSTAR</a>
+        <a href="#schedule">Schedule</a>
+        <a href="presentations.html">Presentations</a>
+        <a href="connect.html">Connect</a>
+      </div>
+      <div class="footer__col">
+        <p class="footer__heading">Follow TJHSST</p>
+        <div class="footer__socials">
+          <a href="https://x.com/TJHSST_Official" target="_blank" rel="noopener" class="social-dot" aria-label="X/Twitter">x</a>
+          <a href="https://www.instagram.com/officialtjhsst/" target="_blank" rel="noopener" class="social-dot" aria-label="Instagram">ig</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p>Website developed by Adhiraj Chhoda (2027)</p>
+    </div>
+  </footer>
+
+  <script src="src/script.js"></script>
+</body>
+</html>
