@@ -8,10 +8,10 @@ export default function Landing({ onNavigate }: { onNavigate: (page: 'landing' |
             May 14, 2026 • 8:00 AM - 3:00 PM
           </div>
           
-          <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tight text-slate-900 mb-6">
+          <h5 className="text-4xl md:text-6xl font-display font-bold tracking-tight text-slate-900 mb-6">
             TJStar<br/>
             TJHSST's Annual Research Symposium
-          </h1>
+          </h5>
           
           <p className="mt-6 text-xl text-slate-600 max-w-2xl mx-auto font-light leading-relaxed mb-10">
             TJHSST's annual research symposium showcasing the innovative work of our senior research students across a wide range of fields. Join us for a day of discovery, inspiration, and some food!
