@@ -185,7 +185,7 @@ export default function App() {
       <footer className="bg-slate-900 py-8 text-center text-slate-400 text-sm mt-auto">
         <div className="max-w-7xl mx-auto px-4">
           <p>© {new Date().getFullYear()} Thomas Jefferson High School for Science and Technology.</p>
-          <p className="mt-2 text-slate-500">Made by Shaun Saladi, Uzair Nasir, and Adhiraj Chhoda</p>
+          <p className="mt-2 text-slate-500">Made by Shaun Saladi, Uzair Nasir, Adhiraj Chhoda, Hicham Ouallah, and Shayan Qureshi</p>
         </div>
       </footer>
     </div>

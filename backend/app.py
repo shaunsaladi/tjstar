@@ -7,35 +7,28 @@ from requests_oauthlib import OAuth2Session
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 
-# Load environmental variables from local configurations
 load_dotenv()
 
 app = Flask(__name__)
 
-# STATIC SESSION CRYPTOGRAPHY KEY
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "tjstar_local_dev_secret_key_string")
 
-# CROSS-PORT COOKIE SECURITY SETTINGS
 app.config.update(
-    SESSION_COOKIE_SAMESITE='Lax',      # Allows cookie transmission across local ports 3000 and 8000
-    SESSION_COOKIE_HTTPONLY=True,      # Blocks malicious client-side script cookie execution
-    SESSION_COOKIE_SECURE=False        # Allows cookies over HTTP during development sessions
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SECURE=False
 )
 
-# MULTIPART MEDIA DISK PATH STORAGE SETTINGS
 UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# SQL ENGINE DATA POOL CONFIGURATION
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tjstar.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Explicitly permit signed credentials to bridge port 3000 to backend engines
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 
-# OAUTH PROTOCOL PATH REFERENCES
 CLIENT_ID = os.environ.get("ION_CLIENT_ID")
 CLIENT_SECRET = os.environ.get("ION_CLIENT_SECRET")
 REDIRECT_URI = os.environ.get("ION_REDIRECT_URI")
@@ -44,11 +37,9 @@ AUTHORIZATION_BASE_URL = "https://ion.tjhsst.edu/oauth/authorize/"
 TOKEN_URL = "https://ion.tjhsst.edu/oauth/token/"
 PROFILE_URL = "https://ion.tjhsst.edu/api/profile"
 
-# Bypass strict HTTPS constraints for native localhost loop execution
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 
-# RELATIONAL DATA MODEL SCHEMAS
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ion_username = db.Column(db.String(80), unique=True, nullable=False)
@@ -67,7 +58,7 @@ class Project(db.Model):
     abstract = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(50), default='Pending Review')
     artifact_path = db.Column(db.String(255), nullable=True)
-    review_note = db.Column(db.Text, nullable=True) # Holds live commentary text fields from administrative edits
+    review_note = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     def to_dict(self):
@@ -86,7 +77,6 @@ class Project(db.Model):
         }
 
 
-# INTERFACE GATEWAY ENDPOINTS
 @app.route("/api/auth/login")
 def login():
     ion = OAuth2Session(CLIENT_ID, redirect_uri=REDIRECT_URI, scope=["read"])
@@ -109,7 +99,7 @@ def callback():
         user = User(
             ion_username=ion_username,
             full_name=profile_data.get('display_name'),
-            email=profile_data.get('tj_email'), # Explicitly maps direct target key schema
+            email=profile_data.get('tj_email'),
             is_student=profile_data.get('is_student', True)
         )
         db.session.add(user)
@@ -120,7 +110,7 @@ def callback():
         'ion_username': user.ion_username,
         'email': user.email,
         'full_name': user.full_name,
-        'picture': "http://localhost:8000/api/picture", # Points React internally to local image proxy stream
+        'picture': "http://localhost:8000/api/picture",
         'is_student': user.is_student
     }
     session['raw_picture_url'] = profile_data.get('picture')
@@ -137,7 +127,6 @@ def get_profile():
 
 @app.route("/api/picture")
 def get_profile_picture():
-    """Proxies the authenticated external resource asset streaming to circumvent CORS restrictions."""
     if 'oauth_token' not in session or 'raw_picture_url' not in session:
         return jsonify({"error": "Unauthorized"}), 401
         
@@ -154,7 +143,6 @@ def get_profile_picture():
         return jsonify({"error": str(e)}), 500
 
 
-# REGISTRY COMPONENT PROCESSING ENDPOINTS
 @app.route("/api/project/me", methods=["GET"])
 def get_my_project():
     if 'user_id' not in session:
@@ -164,7 +152,7 @@ def get_my_project():
     if project:
         return jsonify(project.to_dict())
     return jsonify({"message": "No active projects found"}), 404
-
+    
 @app.route("/api/submit", methods=["POST"])
 def submit_project():
     if 'user_id' not in session:
@@ -194,7 +182,6 @@ def submit_project():
         
     try:
         if project:
-            # Overwrite fields on existing model entries (UPSERT structure blueprint strategy)
             project.title = title
             project.authors = authors
             project.lab = lab
@@ -225,11 +212,10 @@ def submit_project():
         return jsonify({"error": str(e)}), 400
 
 
-# FACULTY ADMINISTRATIVE REVIEWS ENDPOINTS
 @app.route("/api/admin/projects", methods=["GET"])
 def get_admin_projects():
     if 'user' not in session or session['user'].get('is_student') == True:
-        return jsonify({"error": "Forbidden: Administrative role authentication validation required."}), 403
+        return jsonify({"error": "Forbidden: You are not an admin (Login with admin account on ion)"}), 403
         
     projects = Project.query.all()
     return jsonify([project.to_dict() for project in projects])
