@@ -1,6 +1,6 @@
 import os
 import io
-from flask import Flask, redirect, url_for, session, request, jsonify, send_file
+from flask import Flask, redirect, url_for, session, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from requests_oauthlib import OAuth2Session
@@ -9,7 +9,7 @@ from werkzeug.utils import secure_filename
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='dist', static_url_path='/')
 
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "tjstar_local_dev_secret_key_string")
 
@@ -19,6 +19,10 @@ app.config.update(
     SESSION_COOKIE_SECURE=False
 )
 
+
+IS_PRODUCTION = os.environ.get("FLASK_ENV") == "production"
+FRONTEND_URL = "https://test123452345678.sites.tjhsst.edu" if IS_PRODUCTION else "http://localhost:3000"
+
 UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -27,7 +31,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tjstar.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
+CORS(app, supports_credentials=True, origins=[FRONTEND_URL, "http://localhost:3000"])
 
 CLIENT_ID = os.environ.get("ION_CLIENT_ID")
 CLIENT_SECRET = os.environ.get("ION_CLIENT_SECRET")
@@ -37,8 +41,8 @@ AUTHORIZATION_BASE_URL = "https://ion.tjhsst.edu/oauth/authorize/"
 TOKEN_URL = "https://ion.tjhsst.edu/oauth/token/"
 PROFILE_URL = "https://ion.tjhsst.edu/api/profile"
 
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-
+if not IS_PRODUCTION:
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -56,7 +60,7 @@ class Project(db.Model):
     format = db.Column(db.String(120), nullable=False)
     food = db.Column(db.String(120), nullable=False)
     abstract = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(50), default='Pending Review')
+    status = db.Column(db.String(50), default='Not Submitted')
     artifact_path = db.Column(db.String(255), nullable=True)
     review_note = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -75,7 +79,6 @@ class Project(db.Model):
             "artifact_path": self.artifact_path,
             "review_note": self.review_note
         }
-
 
 @app.route("/api/auth/login")
 def login():
@@ -105,18 +108,20 @@ def callback():
         db.session.add(user)
         db.session.commit()
 
+    base_api_url = FRONTEND_URL if IS_PRODUCTION else "http://localhost:8000"
+
     session['user_id'] = user.id
     session['user'] = {
         'ion_username': user.ion_username,
         'email': user.email,
         'full_name': user.full_name,
-        'picture': "http://localhost:8000/api/picture",
+        'picture': f"{base_api_url}/api/picture",
         'is_student': user.is_student
     }
     session['raw_picture_url'] = profile_data.get('picture')
     session['oauth_token'] = token
     
-    return redirect("http://localhost:3000/")
+    return redirect("/")
 
 @app.route("/api/me")
 def get_profile():
@@ -141,7 +146,6 @@ def get_profile_picture():
         return jsonify({"error": "Failed to resolve downstream avatar"}), image_response.status_code
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/api/project/me", methods=["GET"])
 def get_my_project():
@@ -211,7 +215,6 @@ def submit_project():
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
 
-
 @app.route("/api/admin/projects", methods=["GET"])
 def get_admin_projects():
     if 'user' not in session or session['user'].get('is_student') == True:
@@ -248,9 +251,17 @@ def logout():
     session.clear()
     return jsonify({"success": True}), 200
 
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend(path):
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
+
 
 with app.app_context():
     db.create_all()
 
 if __name__ == "__main__":
-    app.run(port=8000, debug=True)
+    app.run(port=8000, debug=not IS_PRODUCTION)
